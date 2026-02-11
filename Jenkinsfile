@@ -1,52 +1,37 @@
 pipeline {
+    agent any
 
-  agent {
-    docker {
-      image 'node:18'
-      args '-u root:root'
-    }
-  }
-
-  environment {
-    VERCEL_PROJECT_NAME = 'simple-nodejs'
-    VERCEL_TOKEN = credentials('devops29-vercel-token')
-  }
-
-  stages {
-
-    stage('Check Node') {
-      steps {
-        sh 'node --version'
-        sh 'npm --version'
-      }
+    environment {
+        VERCEL_TOKEN = credentials('devops29-vercel-token')
     }
 
-    stage('Install') {
-      steps {
-        sh 'npm install'
-      }
-    }
+    stages {
 
-    stage('Build') {
-      steps {
-        echo 'No build step for backend API'
-      }
-    }
+        stage('Test npm') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
 
-    stage('Test') {
-      steps {
-        sh 'npm run test || echo "No test step"'
-      }
-    }
+        stage('Build') {
+            steps {
+                sh 'npm ci'
+                sh 'npm run build || echo "No build step"'
+            }
+        }
 
-    stage('Deploy') {
-      steps {
-        sh 'npm install -g vercel@latest'
-        sh '''
-          vercel link --project $VERCEL_PROJECT_NAME --token $VERCEL_TOKEN --yes
-          vercel --prod --token $VERCEL_TOKEN --confirm
-        '''
-      }
+        stage('Test Build') {
+            steps {
+                sh 'npm run test || echo "No test step"'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'npm install -g vercel'
+                sh 'vercel --token=$VERCEL_TOKEN --prod --confirm'
+            }
+        }
     }
-  }
 }
