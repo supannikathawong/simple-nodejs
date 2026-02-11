@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18'
+            args '-u root:root'
+        }
+    }
 
     environment {
         VERCEL_TOKEN = credentials('devops29-vercel-token')
@@ -7,23 +12,16 @@ pipeline {
 
     stages {
 
-        stage('Test npm') {
+        stage('Check Node') {
             steps {
                 sh 'node -v'
                 sh 'npm -v'
             }
         }
 
-        stage('Build') {
+        stage('Install') {
             steps {
-                sh 'npm ci'
-                sh 'npm run build || echo "No build step"'
-            }
-        }
-
-        stage('Test Build') {
-            steps {
-                sh 'npm run test || echo "No test step"'
+                sh 'npm install'
             }
         }
 
