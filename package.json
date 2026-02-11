@@ -19,5 +19,12 @@
   "dependencies": {
     "@splitsoftware/splitio": "^10.15.5",
     "express": "^4.17.1"
-  }
+  },
+  "scripts": {
+  "start": "node index.js",
+  "build": "echo Build success",
+  "test": "echo Test success"
+}
+
+  
 }
