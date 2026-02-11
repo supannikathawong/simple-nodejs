@@ -23,13 +23,13 @@ pipeline {
 
     stage('Install') {
       steps {
-        sh 'npm ci'
+        sh 'npm install'
       }
     }
 
     stage('Build') {
       steps {
-        sh 'npm run build || echo "No build step"'
+        echo 'No build step for backend API'
       }
     }
 
