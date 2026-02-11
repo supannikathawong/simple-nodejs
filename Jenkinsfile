@@ -1,6 +1,11 @@
 pipeline {
 
-  agent any
+  agent {
+    docker {
+      image 'node:18'
+      args '-u root:root'
+    }
+  }
 
   environment {
     VERCEL_PROJECT_NAME = 'simple-nodejs'
@@ -39,7 +44,7 @@ pipeline {
         sh 'npm install -g vercel@latest'
         sh '''
           vercel link --project $VERCEL_PROJECT_NAME --token $VERCEL_TOKEN --yes
-          vercel --token $VERCEL_TOKEN --prod --confirm
+          vercel --prod --token $VERCEL_TOKEN --confirm
         '''
       }
     }
