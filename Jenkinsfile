@@ -1,35 +1,65 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'
-            args '-u root:root'
+  environment {
+    VERCEL_PROJECT_NAME = 'simple-nodejs'
+    VERCEL_TOKEN = credentials('devops29-vercel-token') // ดึงจาก Jenkins
+  }
+  agent {
+    kubernetes {
+      // This YAML defines the "Docker Container" you want to use
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: my-builder  # We will refer to this name later
+            image: node:20-alpine
+            command:
+            - cat
+            tty: true
+      '''
+    }
+  }
+  stages {
+    stage('Test npm') {
+      steps {
+        container('my-builder') {
+          sh 'npm --version'
+          sh 'node --version'
         }
+      }
+    }
+    stage('Build') {
+      steps {
+        container('my-builder') {
+          sh 'npm ci'
+          sh 'npm run build'
+        }
+      }
+    }
+    stage('Test Build') {
+      steps {
+        container('my-builder') {
+          sh 'npm run test'
+        }
+      }
+    }
+    stage('Deploy') {
+      steps {
+        container('my-builder') {
+          sh 'npm install -g vercel@latest'
+          // Deploy using token-only (non-interactive)
+          sh '''
+            vercel link --project $VERCEL_PROJECT_NAME --token $VERCEL_TOKEN --yes
+            vercel --token $VERCEL_TOKEN --prod --confirm
+          '''
+        }
+      }
     }
 
-    environment {
-        VERCEL_TOKEN = credentials('devops29-vercel-token')
-    }
-
-    stages {
-
-        stage('Check Node') {
-            steps {
-                sh 'node -v'
-                sh 'npm -v'
-            }
-        }
-
-        stage('Install') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh 'npm install -g vercel'
-                sh 'vercel --token=$VERCEL_TOKEN --prod --confirm'
-            }
-        }
-    }
+  }
+  //post {
+    //always {
+      //junit 'test-results/junit.xml'
+    //}
+  //}
 }
